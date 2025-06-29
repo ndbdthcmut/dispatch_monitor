@@ -1,12 +1,17 @@
 from ultralytics import YOLO
 import cv2
+import torch
+
+# Check for CUDA device and set it
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+print(f'Using device: {device}')
 
 # Load the object detection model
-detector_model = YOLO('detection_model.pt')
+detector_model = YOLO('detection_model.pt').to(device)
 
 # Load the image classification model
-dish_classifier_model = YOLO('dish_classification_model.pt')
-tray_classifier_model = YOLO('tray_classification_model.pt')
+dish_classifier_model = YOLO('dish_classification_model.pt').to(device)
+tray_classifier_model = YOLO('tray_classification_model.pt').to(device)
 
 # Load your image
 cap = cv2.VideoCapture("AU_15.mp4")
@@ -21,14 +26,19 @@ def getColours(cls_num):
     return tuple(color)
 
 # Read and display each frame of the stream
+frame_count = 0
+frame_width = int(cap.get(3))
+frame_height = int(cap.get(4))
+fps = cap.get(cv2.CAP_PROP_FPS)
+fourcc = cv2.VideoWriter_fourcc(*"XVID")
+out = cv2.VideoWriter("AU_15_results.avi", fourcc, fps, (frame_width, frame_height))
 while True:
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter("video_result.mp4", fourcc, 15.0, (1920, 1080))
     ret, frame = cap.read()
     if not ret:
-        continue
+        print("End of video or error occurred.")
+        break
     # Run object detection
-    detector_results = detector_model.track(frame, stream=True, imgsz=1920, persist=True)
+    detector_results = detector_model.track(frame, stream=True, imgsz=1920, persist=True, conf=0.5)
     for detector_result in detector_results:
         # get the classes names
         classes_names = detector_result.names
@@ -69,10 +79,15 @@ while True:
                 cv2.rectangle(frame, (x1, y1), (x2, y2), colour, 2)  # Draw bounding box
                 cv2.putText(frame, f"{label_detector} {box.conf[0]:.2f}", (x1, y1-5), cv2.FONT_HERSHEY_SIMPLEX, 1, colour, 2)  # Add label
                 cv2.putText(frame, label, (x1, y2+20), cv2.FONT_HERSHEY_SIMPLEX, 1, colour, 2)  # Add label
+    frame_count +=1
+    print(frame_count)
+    out.write(frame)
     cv2.imshow("Frame",frame)
     
     # Wait for 1ms for key press to continue or exit if 'q' is pressed
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
+        
+out.release()
 cap.release()
 cv2.destroyAllWindows()
