@@ -1,0 +1,9 @@
+services:
+  au_yolo:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+
+    image: "au_yolo_image"
+    container_name: au_yolo
+    privileged: True
