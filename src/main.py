@@ -14,7 +14,7 @@ dish_classifier_model = YOLO('dish_classification_model.pt').to(device)
 tray_classifier_model = YOLO('tray_classification_model.pt').to(device)
 
 # Load your image
-cap = cv2.VideoCapture("AU_15.mp4")
+cap = cv2.VideoCapture("test.mp4")
 
 # Function to get class colors
 def getColours(cls_num):
@@ -31,7 +31,7 @@ frame_width = int(cap.get(3))
 frame_height = int(cap.get(4))
 fps = cap.get(cv2.CAP_PROP_FPS)
 fourcc = cv2.VideoWriter_fourcc(*"XVID")
-out = cv2.VideoWriter("AU_15_results.avi", fourcc, fps, (frame_width, frame_height))
+out = cv2.VideoWriter("test_results.avi", fourcc, fps, (frame_width, frame_height))
 while True:
     ret, frame = cap.read()
     if not ret:
